@@ -8,25 +8,12 @@ class YOLO_Kmeans:
         self.filename = "2012_train.txt"
 
     def iou(self, boxes, clusters):  # 1 box -> k clusters
-        n = boxes.shape[0]
-        k = self.cluster_number
+        boxes = np.expand_dims(boxes, 1)
+        box_area = boxes.prod(axis=-1)
+        cluster_area = clusters.prod(axis=-1)
 
-        box_area = boxes[:, 0] * boxes[:, 1]
-        box_area = box_area.repeat(k)
-        box_area = np.reshape(box_area, (n, k))
-
-        cluster_area = clusters[:, 0] * clusters[:, 1]
-        cluster_area = np.tile(cluster_area, [1, n])
-        cluster_area = np.reshape(cluster_area, (n, k))
-
-        box_w_matrix = np.reshape(boxes[:, 0].repeat(k), (n, k))
-        cluster_w_matrix = np.reshape(np.tile(clusters[:, 0], (1, n)), (n, k))
-        min_w_matrix = np.minimum(cluster_w_matrix, box_w_matrix)
-
-        box_h_matrix = np.reshape(boxes[:, 1].repeat(k), (n, k))
-        cluster_h_matrix = np.reshape(np.tile(clusters[:, 1], (1, n)), (n, k))
-        min_h_matrix = np.minimum(cluster_h_matrix, box_h_matrix)
-        inter_area = np.multiply(min_w_matrix, min_h_matrix)
+        min_matrix = np.minimum(clusters, boxes)
+        inter_area = min_matrix.prod(axis=-1)
 
         result = inter_area / (box_area + cluster_area - inter_area)
         return result
